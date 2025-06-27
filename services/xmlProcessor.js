@@ -34,12 +34,15 @@ export async function processXml(xmlString) {
     let info = { xpath: e.xpath };
     if (e.attributes.bounds) info.bounds = e.attributes.bounds;
     if (e.attributes.text) info.text = e.attributes.text;
+    if(e.attributes.focused) info.focused = e.attributes.focused;
     return info;
   });
 
   return {
     elements_with_resource_id: withResourceId.length,
     elements_without_resource_id: withoutResourceId.length,
-    missing_resource_id_details
+    missing_resource_id_details,
+    elements_focused: elements.filter(e => e.attributes.focused).length,
+    elements_not_focused: elements.filter(e => !e.attributes.focused).length
   };
 } 

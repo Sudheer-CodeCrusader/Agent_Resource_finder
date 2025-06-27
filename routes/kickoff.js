@@ -7,9 +7,28 @@ import fetch from 'node-fetch';
 const router = express.Router();
 
 router.post('/kickoff', async (req, res) => {
-  const { image_url, xml_url } = req.body;
-  if (!image_url || !xml_url) {
-    return res.status(400).json({ error: 'image_url and xml_url are required' });
+  const { base64image, xml_url } = req.body;
+  if (!base64image || !xml_url) {
+    return res.status(400).json({ error: 'base64image and xml_url are required' });
+  }
+
+  // Validate base64 image format
+  let imageBuffer;
+  try {
+    // Remove data URL prefix if present (e.g., "data:image/png;base64,")
+    const base64Data = base64image.replace(/^data:image\/[a-z]+;base64,/, '');
+    imageBuffer = Buffer.from(base64Data, 'base64');
+    
+    // Basic validation - check if it's a valid image by looking at the first few bytes
+    const header = imageBuffer.toString('hex', 0, 8).toUpperCase();
+    const validImageHeaders = ['FFD8FF', '89504E47', '47494638', '52494646'];
+    const isValidImage = validImageHeaders.some(headerStart => header.startsWith(headerStart));
+    
+    if (!isValidImage) {
+      return res.status(400).json({ error: 'Invalid image format. Please provide a valid base64 encoded image (JPEG, PNG, GIF, etc.)' });
+    }
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid base64 image data: ' + e.message });
   }
 
   let xml_data;
@@ -30,7 +49,7 @@ router.post('/kickoff', async (req, res) => {
   }
 
   const kickoff_id = uuidv4();
-  store.set(kickoff_id, { image_url, xml_url, summary });
+  store.set(kickoff_id, { base64image, xml_url, summary, imageBuffer });
 
   res.json({ kickoff_id });
 });
