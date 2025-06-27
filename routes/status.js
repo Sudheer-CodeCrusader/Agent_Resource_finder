@@ -1,8 +1,8 @@
 import express from 'express';
 import store from '../store/memoryStore.js';
-
+ 
 const router = express.Router();
-
+ 
 router.get('/status/:kickoff_id', (req, res) => {
   const { kickoff_id } = req.params;
   const data = store.get(kickoff_id);
@@ -11,8 +11,10 @@ router.get('/status/:kickoff_id', (req, res) => {
   }
   res.json({
     kickoff_id,
-    summary: data.summary
+    data: data.summary,
+    state:"SUCCESS"
   });
 });
-
-export default router; 
+ 
+export default router;
+ 
