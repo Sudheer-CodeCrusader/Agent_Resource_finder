@@ -7,7 +7,14 @@ import axios from 'axios';
 const router = express.Router();
 
 router.post('/kickoff', async (req, res) => {
-  const { image_url, xml_url } = req.body;
+  let { image_url, xml_url } = req.body;
+  try {
+    if (req.body.inputs) {
+      image_url = req.body.inputs.image_url
+      xml_url = req.body.inputs.xml_url
+    }
+  } catch (e) { }
+
   if (!image_url || !xml_url) {
     return res.status(200).json({ error: 'image_url and xml_url are required' });
   }
@@ -41,22 +48,22 @@ router.post('/kickoff', async (req, res) => {
     try {
       // Fetch binary image data
       let _imageresp = await axios.get(image_url, { responseType: 'arraybuffer' });
- 
+
       // Convert to Buffer
       imageBuffer = Buffer.from(_imageresp.data, 'binary');
- 
+
       // Optionally convert to base64 if needed
       base64Data = imageBuffer.toString('base64');
- 
+
       // Validate image by checking magic number
       const header = imageBuffer.toString('hex', 0, 8).toUpperCase();
       const validImageHeaders = ['FFD8FF', '89504E47', '47494638', '52494646'];
       const isValidImage = validImageHeaders.some(h => header.startsWith(h));
- 
+
       if (!isValidImage) {
         return res.status(400).json({ error: 'Invalid image format. Please provide a valid base64 encoded image (JPEG, PNG, GIF, etc.)' });
       }
- 
+
     } catch (e) {
       return res.status(400).json({ error: 'Invalid image fetch or decode: ' + e.message });
     }
@@ -80,6 +87,7 @@ router.post('/kickoff', async (req, res) => {
       return res.status(200).json({ error: 'Could not fetch XML: ' + e.message });
     }
   }
+
 
 
   let summary;
