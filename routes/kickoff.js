@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { processXml } from '../services/xmlProcessor.js';
 import store from '../store/memoryStore.js';
 import fetch from 'node-fetch';
-
+import axios from 'axios';
 const router = express.Router();
 
 router.post('/kickoff', async (req, res) => {
@@ -32,13 +32,24 @@ router.post('/kickoff', async (req, res) => {
   }
 
   let xml_data;
-  try {
-    const response = await fetch(xml_url);
-    if (!response.ok) throw new Error('Failed to fetch XML from url');
-    xml_data = await response.text();
-  } catch (e) {
-    return res.status(400).json({ error: 'Could not fetch XML: ' + e.message });
+  if (xml_url && xml_url.includes('source')) {
+      try {
+          let _xmlresp = await axios.get(xml_url);
+          xml_data = _xmlresp.data.value
+      } catch (e) {
+          return res.status(400).json({ error: 'Could not fetch XML: ' + e.message });
+      }
+  } else {
+      try {
+          const response = await fetch(xml_url);
+          if (!response.ok) throw new Error('Failed to fetch XML from url');
+          xml_data = await response.text();
+      } catch (e) {
+          return res.status(400).json({ error: 'Could not fetch XML: ' + e.message });
+      }
   }
+
+
 
   let summary;
   try {
